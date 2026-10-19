@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechnozGames ⚡ Cyber Battle Arena</title>
+  <meta name="description" content="TechnozGames - An intense 2D arcade battle arena featuring real-time fighter combat, combo scoring, and dynamic championship ranking.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="technoz-app">
+    <!-- Top Bar Navigation / Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-badge">ARCADE HUB</span>
+        <h1 class="brand-title"><span class="highlight-cyan">TECHNOZ</span><span class="highlight-orange">GAMES</span></h1>
+      </div>
+      
+      <div class="header-controls">
+        <button id="btn-mode-select" class="nav-btn" title="Change Game Mode">
+          <span class="icon">🎮</span> Mode: <span id="current-mode-label">Player vs CPU</span>
+        </button>
+        <button id="btn-controls" class="nav-btn" title="View Key Controls">
+          <span class="icon">⌨️</span> Controls
+        </button>
+        <button id="btn-leaderboard" class="nav-btn" title="View High Scores">
+          <span class="icon">🏆</span> Scores
+        </button>
+        <button id="btn-audio-toggle" class="nav-btn" title="Toggle Sound">
+          <span id="audio-icon" class="icon">🔊</span> Sound
+        </button>
+        <button id="btn-fullscreen" class="nav-btn" title="Toggle Fullscreen">
+          <span class="icon">⛶</span> Fullscreen
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Arena Section -->
+    <main class="game-wrapper">
+      <!-- Battle HUD -->
+      <div class="battle-hud" id="battle-hud">
+        <!-- Fighter 1 (Left / Cyan) -->
+        <div class="fighter-card p1-card">
+          <div class="fighter-header">
+            <div class="avatar p1-avatar">⚡</div>
+            <div class="fighter-meta">
+              <span class="fighter-name">VOLT STRIKER</span>
+              <span class="fighter-role">PLAYER 1</span>
+            </div>
+            <div class="round-indicators" id="p1-rounds">
+              <span class="round-gem" data-round="1"></span>
+              <span class="round-gem" data-round="2"></span>
+            </div>
+          </div>
+          <div class="meter-group">
+            <div class="meter-bar hp-bar-bg">
+              <div class="meter-fill hp-fill p1-hp" id="p1-hp-bar" style="width: 100%;"></div>
+              <div class="meter-ghost p1-ghost" id="p1-hp-ghost" style="width: 100%;"></div>
+              <span class="meter-value" id="p1-hp-text">1000 / 1000</span>
+            </div>
+            <div class="meter-bar super-bar-bg">
+              <div class="meter-fill super-fill p1-super" id="p1-super-bar" style="width: 0%;"></div>
+              <span class="meter-tag" id="p1-super-tag">SUPER 0%</span>
+            </div>
+          </div>
+          <div class="score-display">
+            <span class="score-label">POINTS</span>
+            <span class="score-digits" id="p1-score">00000</span>
+          </div>
+        </div>
+
+        <!-- Center Match Timer & Round info -->
+        <div class="match-center">
+          <div class="round-badge" id="hud-round-label">ROUND 1</div>
+          <div class="timer-display" id="hud-timer">60</div>
+          <div class="versus-text">VS</div>
+        </div>
+
+        <!-- Fighter 2 (Right / Orange) -->
+        <div class="fighter-card p2-card">
+          <div class="fighter-header reverse">
+            <div class="avatar p2-avatar">🔥</div>
+            <div class="fighter-meta">
+              <span class="fighter-name">CRIMSON TITAN</span>
+              <span class="fighter-role" id="p2-role-label">CPU (WARRIOR)</span>
+            </div>
+            <div class="round-indicators" id="p2-rounds">
+              <span class="round-gem" data-round="1"></span>
+              <span class="round-gem" data-round="2"></span>
+            </div>
+          </div>
+          <div class="meter-group">
+            <div class="meter-bar hp-bar-bg">
+              <div class="meter-fill hp-fill p2-hp" id="p2-hp-bar" style="width: 100%;"></div>
+              <div class="meter-ghost p2-ghost" id="p2-hp-ghost" style="width: 100%;"></div>
+              <span class="meter-value" id="p2-hp-text">1000 / 1000</span>
+            </div>
+            <div class="meter-bar super-bar-bg">
+              <div class="meter-fill super-fill p2-super" id="p2-super-bar" style="width: 0%;"></div>
+              <span class="meter-tag" id="p2-super-tag">SUPER 0%</span>
+            </div>
+          </div>
+          <div class="score-display reverse">
+            <span class="score-label">POINTS</span>
+            <span class="score-digits" id="p2-score">00000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Battlefield -->
+      <div class="canvas-container" id="canvas-container">
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+
+        <!-- Big Announcement Overlay Banner (ROUND 1, FIGHT, KO, etc.) -->
+        <div class="announcement-overlay" id="announcement-overlay">
+          <h2 class="announcement-title" id="announcement-title">ROUND 1</h2>
+          <p class="announcement-subtitle" id="announcement-subtitle">GET READY!</p>
+        </div>
+
+        <!-- Quick In-Game Pause Overlay -->
+        <div class="pause-overlay hidden" id="pause-overlay">
+          <div class="modal-card">
+            <h2>GAME PAUSED</h2>
+            <div class="modal-buttons">
+              <button class="btn btn-primary" id="btn-resume">RESUME</button>
+              <button class="btn btn-secondary" id="btn-restart-match">RESTART MATCH</button>
+              <button class="btn btn-danger" id="btn-quit-menu">MAIN MENU</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Touch / Keyboard Quick Controls Bar for Mobile/Tablet -->
+      <div class="quick-controls-bar">
+        <div class="hint-p1">
+          <span class="badge badge-cyan">P1: Volt</span>
+          <span><b>A/D</b> Move</span> • <span><b>W</b> Jump</span> • <span><b>S</b> Block</span> • <span><b>J</b> Punch</span> • <span><b>K</b> Kick</span> • <span><b>L</b> Super</span>
+        </div>
+        <div class="hint-p2">
+          <span class="badge badge-orange">P2: Crimson</span>
+          <span><b>Arrows</b> Move/Jump/Block</span> • <span><b>Num 1</b> (or <b>U</b>) Punch</span> • <span><b>Num 2</b> (or <b>I</b>) Kick</span> • <span><b>Num 3</b> (or <b>O</b>) Super</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modals & Overlays -->
+    <!-- 1. Mode Selection Modal -->
+    <div class="modal-backdrop hidden" id="modal-mode">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>SELECT BATTLE MODE</h2>
+          <button class="btn-close" id="btn-close-mode">&times;</button>
+        </div>
+        <div class="mode-grid">
+          <div class="mode-card selected" data-mode="pvcpu">
+            <div class="mode-icon">🤖</div>
+            <h3>Player vs CPU</h3>
+            <p>Battle against the adaptive Technoz AI engine. Great for solo challenge!</p>
+            <div class="difficulty-select">
+              <label for="ai-difficulty">Difficulty:</label>
+              <select id="ai-difficulty">
+                <option value="easy">Novice (Easy)</option>
+                <option value="medium" selected>Warrior (Normal)</option>
+                <option value="hard">Cyber Master (Hard)</option>
+              </select>
+            </div>
+          </div>
+          <div class="mode-card" data-mode="pvp">
+            <div class="mode-icon">👥</div>
+            <h3>2-Player Local</h3>
+            <p>Battle head-to-head on the same keyboard. Prove who's the true champion!</p>
+          </div>
+          <div class="mode-card" data-mode="training">
+            <div class="mode-icon">🎯</div>
+            <h3>Training Dojo</h3>
+            <p>Practice combos, test frame-traps, and master Super special moves with no timer.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-large" id="btn-start-selected-mode">START BATTLE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Controls Reference Modal -->
+    <div class="modal-backdrop hidden" id="modal-controls">
+      <div class="modal-card controls-modal">
+        <div class="modal-header">
+          <h2>BATTLE CONTROLS & COMBOS</h2>
+          <button class="btn-close" id="btn-close-controls">&times;</button>
+        </div>
+        <div class="controls-columns">
+          <div class="controls-col col-p1">
+            <h3 class="col-title p1-color">⚡ VOLT STRIKER (Player 1)</h3>
+            <table class="controls-table">
+              <tr><td>Move Left / Right</td><td><kbd>A</kbd> / <kbd>D</kbd></td></tr>
+              <tr><td>Jump (Double Jump!)</td><td><kbd>W</kbd></td></tr>
+              <tr><td>Crouch / Guard Block</td><td><kbd>S</kbd> (Reduces damage 70%)</td></tr>
+              <tr><td>Light Attack (Punch)</td><td><kbd>J</kbd> or <kbd>F</kbd> (+100 pts)</td></tr>
+              <tr><td>Heavy Attack (Slash)</td><td><kbd>K</kbd> or <kbd>G</kbd> (+250 pts)</td></tr>
+              <tr><td>Super Move (Thunder Blast)</td><td><kbd>L</kbd> or <kbd>R</kbd> (+600 pts, 100% Super)</td></tr>
+            </table>
+          </div>
+          <div class="controls-col col-p2">
+            <h3 class="col-title p2-color">🔥 CRIMSON TITAN (Player 2 / CPU)</h3>
+            <table class="controls-table">
+              <tr><td>Move Left / Right</td><td><kbd>←</kbd> / <kbd>→</kbd></td></tr>
+              <tr><td>Jump</td><td><kbd>↑</kbd></td></tr>
+              <tr><td>Crouch / Guard Block</td><td><kbd>↓</kbd> (Reduces damage 70%)</td></tr>
+              <tr><td>Light Attack (Punch)</td><td><kbd>Num 1</kbd> or <kbd>U</kbd> or <kbd>,</kbd></td></tr>
+              <tr><td>Heavy Attack (Kick)</td><td><kbd>Num 2</kbd> or <kbd>I</kbd> or <kbd>.</kbd></td></tr>
+              <tr><td>Super Move (Infernal Meteor)</td><td><kbd>Num 3</kbd> or <kbd>O</kbd> or <kbd>/</kbd></td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="scoring-info-box">
+          <h4>🏆 Points & Scoring Mechanics:</h4>
+          <ul>
+            <li><b>Combo Streaks:</b> Chain attacks within 1.2s to gain <b>1.2x – 3.0x score multipliers</b>.</li>
+            <li><b>Perfect Guard:</b> Blocking attacks awards <b>+75 points</b>.</li>
+            <li><b>Round End Bonuses:</b> Health bonus (HP × 25 pts) + Time bonus (Seconds × 40 pts) + Win bonus (+1,500 pts).</li>
+            <li><b>Championship Bonus:</b> Final winner earns an additional <b>+5,000 championship points</b>!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Post-Match Championship Winner & Points Breakdown Modal -->
+    <div class="modal-backdrop hidden" id="modal-match-results">
+      <div class="modal-card results-card">
+        <div class="results-header">
+          <div class="trophy-icon">🏆</div>
+          <span class="sub-championship">TECHNOZ ARENA CHAMPIONSHIP</span>
+          <h2 class="winner-headline" id="results-winner-name">VOLT STRIKER WINS!</h2>
+        </div>
+
+        <div class="results-comparison">
+          <!-- P1 Final Stats -->
+          <div class="results-fighter p1-results">
+            <div class="results-avatar">⚡</div>
+            <h3 class="fighter-title">VOLT STRIKER</h3>
+            <span class="results-badge" id="p1-win-tag">VICTOR</span>
+            <div class="stat-rows">
+              <div class="stat-row"><span>Rounds Won</span><b id="res-p1-rounds">2</b></div>
+              <div class="stat-row"><span>Damage Dealt</span><b id="res-p1-damage">1850</b></div>
+              <div class="stat-row"><span>Hits Landed</span><b id="res-p1-hits">14</b></div>
+              <div class="stat-row"><span>Max Combo</span><b id="res-p1-combo">4x</b></div>
+              <div class="stat-row"><span>Combat Points</span><b id="res-p1-combat-pts">3200</b></div>
+              <div class="stat-row highlight"><span>Round & HP Bonus</span><b id="res-p1-bonus-pts">+3500</b></div>
+              <div class="stat-row winner-total"><span>FINAL SCORE</span><b id="res-p1-total-pts">11700</b></div>
+            </div>
+          </div>
+
+          <!-- VS Divider -->
+          <div class="results-vs">
+            <span class="vs-circle">VS</span>
+          </div>
+
+          <!-- P2 Final Stats -->
+          <div class="results-fighter p2-results">
+            <div class="results-avatar">🔥</div>
+            <h3 class="fighter-title">CRIMSON TITAN</h3>
+            <span class="results-badge badge-runner" id="p2-win-tag">RUNNER UP</span>
+            <div class="stat-rows">
+              <div class="stat-row"><span>Rounds Won</span><b id="res-p2-rounds">1</b></div>
+              <div class="stat-row"><span>Damage Dealt</span><b id="res-p2-damage">1420</b></div>
+              <div class="stat-row"><span>Hits Landed</span><b id="res-p2-hits">10</b></div>
+              <div class="stat-row"><span>Max Combo</span><b id="res-p2-combo">2x</b></div>
+              <div class="stat-row"><span>Combat Points</span><b id="res-p2-combat-pts">2100</b></div>
+              <div class="stat-row highlight"><span>Round & HP Bonus</span><b id="res-p2-bonus-pts">+1500</b></div>
+              <div class="stat-row winner-total"><span>FINAL SCORE</span><b id="res-p2-total-pts">3600</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer results-actions">
+          <button class="btn btn-primary btn-large" id="btn-results-rematch">REMATCH</button>
+          <button class="btn btn-secondary btn-large" id="btn-results-menu">CHANGE MODE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Leaderboard Modal -->
+    <div class="modal-backdrop hidden" id="modal-leaderboard">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>HALL OF FAME 🏆</h2>
+          <button class="btn-close" id="btn-close-leaderboard">&times;</button>
+        </div>
+        <div class="leaderboard-container">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Champion</th>
+                <th>Mode</th>
+                <th>Rounds</th>
+                <th>Final Points</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btn-clear-scores">Clear History</button>
+          <button class="btn btn-primary" id="btn-close-scores">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/fighter.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
